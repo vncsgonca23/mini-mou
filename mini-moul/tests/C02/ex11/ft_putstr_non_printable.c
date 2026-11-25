@@ -2,119 +2,108 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include "../../../../ex11/ft_putstr_non_printable.c"
 #include "../../../utils/constants.h"
 
 typedef struct s_test
 {
-	char *desc;
-	char *src;
-	char *expected;
-} t_test;
+	char	*desc;
+	char	*src;
+	char	*expected;
+}	t_test;
 
-int run_tests(t_test *tests, int count);
+int	run_tests(t_test *tests, int count);
 
-int main(void)
+int	main(void)
 {
-	t_test tests[] = {
-	    {.desc = "ft_putstr_non_printable(\"Coucou\\ntu vas bien\")",
-	     .src = "Coucou\ntu vas bien",
-	     .expected = "Coucou\\0atu vas bien"},
-	    {.desc = "ft_putstr_non_printable(\"\")",
-	     .src = "",
-	     .expected = ""},
-	    {.desc = "ft_putstr_non_printable(\"\\x01\")",
-	     .src = "\t01",
-	     .expected = "\\0901"},
-	    {.desc = "ft_putstr_non_printable(\"\\x1F\")",
-	     .src = "\x1F",
-	     .expected = "\\1f"},
-	    {.desc = "ft_putstr_non_printable(\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\")",
-	     .src = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
-	     .expected = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"},
-	    {.desc = "ft_putstr_non_printable(\"0123456789\")",
-	     .src = "0123456789",
-	     .expected = "0123456789"},
-	    {.desc = "ft_putstr_non_printable(\"This is a long string. It has more than 16 bytes.\")",
-	     .src = "This is a long string. It has more than 16 bytes.",
-	     .expected = "This is a long string. It has more than 16 bytes."},
-	    {
-		.desc = "Print non-printable ASCII characters",
-		.src = "Some\nrandom\ttext\x0Fwith\nnon-printable\rcharacters",
-		.expected = "Some\\0arandom\\09text\\0fwith\\0anon-printable\\0dcharacters",
-	    },
-	    {
-		.desc = "Print empty string",
-		.src = "",
-		.expected = "",
-	    },
-	    {
-		.desc = "Print string with only printable characters",
-		.src = "Hello, world!",
-		.expected = "Hello, world!",
-	    },
-	    {
-		.desc = "Print string with more than 16 bytes",
-		.src = "This is a long string. It has more than 16 bytes.",
-		.expected = "This is a long string. It has more than 16 bytes.",
-	    },
-	    {
-		.desc = "Print string with exactly 16 bytes",
-		.src = "0123456789ABCDEF",
-		.expected = "0123456789ABCDEF",
-	    },
-	    // Add more test cases here
+	t_test	tests[] = {
+		{
+			.desc = "Subject example (Hello\\nHow are you?)",
+			.src = "Hello\nHow are you?",
+			.expected = "Hello\\0aHow are you?",
+		},
+		{
+			.desc = "Empty string",
+			.src = "",
+			.expected = "",
+		},
+		{
+			.desc = "Printable ASCII boundaries (32..126)",
+			.src = " !~09AZaz",
+			.expected = " !~09AZaz",
+		},
+		{
+			.desc = "Low control chars (0x01, 0x09, 0x0d, 0x1f)",
+			.src = "\x01\t\r\x1f",
+			.expected = "\\01\\09\\0d\\1f",
+		},
+		{
+			.desc = "DEL (0x7f) and extended bytes (0x80, 0x9a, 0xff)",
+			.src = "A\x7f\x80\x9a\xff" "Z",
+			.expected = "A\\7f\\80\\9a\\ffZ",
+		},
+		{
+			.desc = "String starts with extended bytes, then mixes ASCII and controls",
+			.src = "\x9b\x85\xc6\xae" "X0" "\xbb" "N" "\x06\xa7\xa9\x0e",
+			.expected = "\\9b\\85\\c6\\aeX0\\bbN\\06\\a7\\a9\\0e",
+		},
+		{
+			.desc = "Mixed printable and non-printable text",
+			.src = "Some\nrandom\ttext\x0Fwith\nnon-printable\rcharacters",
+			.expected = "Some\\0arandom\\09text\\0fwith\\0anon-printable\\0dcharacters",
+		},
+		{
+			.desc = "String with embedded NUL stops at NUL",
+			.src = "Hi\n\0hidden\t",
+			.expected = "Hi\\0a",
+		},
 	};
-	int count = sizeof(tests) / sizeof(tests[0]);
+	int		count = sizeof(tests) / sizeof(tests[0]);
 
 	return (run_tests(tests, count));
 }
 
-int run_tests(t_test *tests, int count)
+int	run_tests(t_test *tests, int count)
 {
-	int i;
-	int error = 0;
+	int	i;
+	int	error = 0;
 
 	for (i = 0; i < count; i++)
 	{
-		// Flush the standard output buffer
 		fflush(stdout);
 
-		char buffer[1024];
-		// Clear the buffer used to capture the output of the function being tested
+		char	buffer[1024];
 		memset(buffer, 0, sizeof(buffer));
 
-		// Redirect the output to a file
-		int saved_stdout = dup(STDOUT_FILENO);
-		int output_fd = open("output.txt", O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+		int	saved_stdout = dup(STDOUT_FILENO);
+		int	output_fd = open("output.txt", O_WRONLY | O_CREAT | O_TRUNC,
+			S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 		dup2(output_fd, STDOUT_FILENO);
 		close(output_fd);
 
-		// Call the function to be tested
 		ft_putstr_non_printable(tests[i].src);
 
-		// Restore the original output
 		fflush(stdout);
 		dup2(saved_stdout, STDOUT_FILENO);
 		close(saved_stdout);
 
-		// Open the output file and check its contents
-		FILE *fp = fopen("output.txt", "r");
-		fgets(buffer, sizeof(buffer), fp);
+		FILE	*fp = fopen("output.txt", "rb");
+		size_t	len = fread(buffer, 1, sizeof(buffer) - 1, fp);
 		fclose(fp);
+		remove("output.txt");
+		buffer[len] = '\0';
 
-		// Check that the output matches the expected value
-		if (strcmp(buffer, tests[i].expected) != 0)
+		size_t	expected_len = strlen(tests[i].expected);
+		if (len != expected_len || memcmp(buffer, tests[i].expected, expected_len) != 0)
 		{
-			printf("    " RED "[%d] %s Expected \"%s\", got \"%s\"\n", i + 1, tests[i].desc, tests[i].expected, buffer);
+			printf("    " RED "[%d] %s Expected \"%s\" (%zu bytes), got \"%s\" (%zu bytes)\n" DEFAULT,
+				i + 1, tests[i].desc, tests[i].expected, expected_len, buffer, len);
 			error -= 1;
 		}
 		else
-			printf("  " GREEN CHECKMARK GREY " [%d] %s output \"%s\" as expected\n" DEFAULT, i + 1, tests[i].desc, buffer);
-
-		// Delete the output file
-		remove("output.txt");
+			printf("  " GREEN CHECKMARK GREY " [%d] %s output \"%s\" as expected\n" DEFAULT,
+				i + 1, tests[i].desc, buffer);
 	}
-
 	return (error);
 }
