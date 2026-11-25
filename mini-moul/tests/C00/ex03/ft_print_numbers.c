@@ -2,62 +2,57 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include "../../../../ex03/ft_print_numbers.c"
 #include "../../../utils/constants.h"
 
-void print_success(char *str, int num);
-void print_error(char *str, int num);
-int test1(void);
+int	run_call(int num, const char *desc);
 
-int main(void)
+int	main(void)
 {
-        if (test1() != 0)
-                return (-1);
-        return (0);
+	int	error = 0;
+
+	if (run_call(1, "ft_print_numbers()") != 0)
+		error -= 1;
+	if (run_call(2, "ft_print_numbers() second call") != 0)
+		error -= 1;
+	return (error);
 }
 
-int test1(void)
+int	run_call(int num, const char *desc)
 {
-        // Redirect the output to a file
-        int saved_stdout = dup(STDOUT_FILENO);
-        int output_fd = open("output.txt", O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-        dup2(output_fd, STDOUT_FILENO);
-        close(output_fd);
+	const char	*expected_output = "0123456789";
+	size_t		expected_len = strlen(expected_output);
+	char		buffer[1024];
 
-        // Call the function to be tested
-        ft_print_numbers();
+	fflush(stdout);
+	memset(buffer, 0, sizeof(buffer));
 
-        // Restore the original output
-        fflush(stdout);
-        dup2(saved_stdout, STDOUT_FILENO);
-        close(saved_stdout);
+	int	saved_stdout = dup(STDOUT_FILENO);
+	int	output_fd = open("output.txt", O_WRONLY | O_CREAT | O_TRUNC,
+		S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+	dup2(output_fd, STDOUT_FILENO);
+	close(output_fd);
 
-        // Open the output file and check its contents
-        FILE *fp = fopen("output.txt", "r");
-        char buffer[1024];
-        fgets(buffer, sizeof(buffer), fp);
-        fclose(fp);
+	ft_print_numbers();
 
-        // Check that the output matches the expected value
-        const char *expected_output = "0123456789";
-        if (strcmp(buffer, expected_output) != 0)
-        {
-                printf("    " RED "[1] ft_print_numbers() Expected \"%s\", got \"%s\"\n"DEFAULT, expected_output, buffer);
-                remove("output.txt");
-                return (-1);
-        }
-        else
-                printf("  " GREEN CHECKMARK GREY " [1] ft_print_numbers() output \"%s\" as expected\n"DEFAULT, buffer);
-        remove("output.txt");
-        return (0);
-}
+	fflush(stdout);
+	dup2(saved_stdout, STDOUT_FILENO);
+	close(saved_stdout);
 
-void print_success(char *str, int num)
-{
-        printf("  " GREEN CHECKMARK GREY " [%d] %s\n" DEFAULT, num, str);
-}
+	FILE	*fp = fopen("output.txt", "rb");
+	size_t	len = fread(buffer, 1, sizeof(buffer) - 1, fp);
+	fclose(fp);
+	remove("output.txt");
+	buffer[len] = '\0';
 
-void print_error(char *str, int num)
-{
-        printf("    " RED "[%d] %s\n" DEFAULT, num, str);
+	if (len != expected_len || memcmp(buffer, expected_output, expected_len) != 0)
+	{
+		printf("    " RED "[%d] %s Expected \"%s\" (%zu bytes), got \"%s\" (%zu bytes)\n" DEFAULT,
+			num, desc, expected_output, expected_len, buffer, len);
+		return (-1);
+	}
+	printf("  " GREEN CHECKMARK GREY " [%d] %s output \"%s\" as expected\n" DEFAULT,
+		num, desc, buffer);
+	return (0);
 }

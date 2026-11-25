@@ -1,134 +1,91 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include "../../../../ex02/ft_ultimate_range.c"
 #include "../../../utils/constants.h"
 
 typedef struct s_test
 {
-    char *desc;
-    int min;
-    int max;
-    int **range;
-    int expected_return;
-    int *expected_range;
-} t_test;
+	char	*desc;
+	int		min;
+	int		max;
+	int		expected_return;
+}	t_test;
 
-int run_tests(t_test *tests, int count);
+int	run_tests(t_test *tests, int count);
 
-int main(void)
+int	main(void)
 {
-    t_test tests[] = {
-        {
-            .desc = "ft_ultimate_range with min 0, max 0",
-            .min = 0,
-            .max = 0,
-            .range = NULL,
-            .expected_return = 0,
-            .expected_range = NULL,
-        },
-        {
-            .desc = "ft_ultimate_range with min 0, max 5",
-            .min = 0,
-            .max = 5,
-            .range = NULL,
-            .expected_return = 5,
-            .expected_range = (int[]){0, 1, 2, 3, 4},
-        },
-        {
-            .desc = "ft_ultimate_range with min -5, max 5",
-            .min = -5,
-            .max = 5,
-            .range = NULL,
-            .expected_return = 10,
-            .expected_range = (int[]){-5, -4, -3, -2, -1, 0, 1, 2, 3, 4},
-        },
-        {
-            .desc = "ft_ultimate_range with min -10, max -5",
-            .min = -10,
-            .max = -5,
-            .range = NULL,
-            .expected_return = 5,
-            .expected_range = (int[]){-10, -9, -8, -7, -6},
-        },
-        {
-            .desc = "ft_ultimate_range with max less than min",
-            .min = 10,
-            .max = 5,
-            .range = NULL,
-            .expected_return = 0,
-            .expected_range = NULL,
-        },
-        {
-            .desc = "ft_ultimate_range with both min and max equal to 2147483647",
-            .min = 2147483647,
-            .max = 2147483647,
-            .range = NULL,
-            .expected_return = 0,
-            .expected_range = NULL,
-        },
-        {
-            .desc = "ft_ultimate_range with both min and max equal to -2147483648",
-            .min = -2147483648,
-            .max = -2147483648,
-            .range = NULL,
-            .expected_return = 0,
-            .expected_range = NULL,
-        },
-    };
-    int count = sizeof(tests) / sizeof(tests[0]);
+	t_test	tests[] = {
+		{.desc = "min == max (0, 0) -> 0 & *range = NULL", .min = 0, .max = 0, .expected_return = 0},
+		{.desc = "min > max (10, 5) -> 0 & *range = NULL", .min = 10, .max = 5, .expected_return = 0},
+		{.desc = "min == max == INT_MAX -> 0 & *range = NULL", .min = INT_MAX, .max = INT_MAX, .expected_return = 0},
+		{.desc = "min == max == INT_MIN -> 0 & *range = NULL", .min = INT_MIN, .max = INT_MIN, .expected_return = 0},
+		{.desc = "Single element (42, 43)", .min = 42, .max = 43, .expected_return = 1},
+		{.desc = "Positive range (0, 5)", .min = 0, .max = 5, .expected_return = 5},
+		{.desc = "Negative to positive (-5, 5)", .min = -5, .max = 5, .expected_return = 10},
+		{.desc = "All negative (-10, -5)", .min = -10, .max = -5, .expected_return = 5},
+		{.desc = "Near INT_MIN (INT_MIN, INT_MIN + 5)", .min = INT_MIN, .max = INT_MIN + 5, .expected_return = 5},
+		{.desc = "Near INT_MAX (INT_MAX - 5, INT_MAX)", .min = INT_MAX - 5, .max = INT_MAX, .expected_return = 5},
+	};
+	int		count = sizeof(tests) / sizeof(tests[0]);
 
-    return (run_tests(tests, count));
+	return (run_tests(tests, count));
 }
 
-int run_tests(t_test *tests, int count)
+int	run_tests(t_test *tests, int count)
 {
-    int i;
-    int error = 0;
+	int	i;
+	int	error = 0;
+	int	sentinel = 12345;
 
-    for (i = 0; i < count; i++)
-    {
-        int *result;
-        int expected_size = (tests[i].max - tests[i].min);
+	for (i = 0; i < count; i++)
+	{
+		int	*result = &sentinel;
+		int	range_size = ft_ultimate_range(&result, tests[i].min, tests[i].max);
 
-        int range_size = ft_ultimate_range(&result, tests[i].min, tests[i].max);
-
-        if (tests[i].expected_range == NULL && result == NULL)
-        {
-            printf("  " GREEN CHECKMARK GREY " [%d] %s Expected NULL, got NULL\n" DEFAULT, i + 1, tests[i].desc);
-        }
-        else if (tests[i].expected_range == NULL || result == NULL)
-        {
-            printf("    " RED "[%d] %s Expected %p, got %p\n" DEFAULT, i + 1, tests[i].desc, tests[i].expected_range, result);
-            error--;
-        }
-        else if (range_size != expected_size)
-        {
-            printf("    " RED "[%d] %s Expected size %d, got size %d\n" DEFAULT, i + 1, tests[i].desc, expected_size, range_size);
-            error--;
-        }
-        else if (memcmp(result, tests[i].expected_range, expected_size * sizeof(int)) != 0)
-        {
-            printf("    " RED "[%d] %s Expected { ", i + 1, tests[i].desc);
-            for (int j = 0; j < expected_size; j++)
-            {
-                printf("%d, ", tests[i].expected_range[j]);
-            }
-            printf("}, got { ");
-            for (int j = 0; j < expected_size; j++)
-            {
-                printf("%d, ", result[j]);
-            }
-            printf("}\n" DEFAULT);
-            error--;
-        }
-        else
-        {
-            printf("  " GREEN CHECKMARK GREY " [%d] %s Passed\n" DEFAULT, i + 1, tests[i].desc);
-        }
-
-        free(result);
-    }
-
-    return error;
+		if (tests[i].expected_return == 0)
+		{
+			if (range_size != 0 || result != NULL)
+			{
+				printf("    " RED "[%d] %s Expected ret=0 & *range=NULL, got ret=%d & *range=%p\n" DEFAULT,
+					i + 1, tests[i].desc, range_size, (void *)result);
+				error -= 1;
+				if (result != NULL && result != &sentinel)
+					free(result);
+			}
+			else
+				printf("  " GREEN CHECKMARK GREY " [%d] %s Passed (ret=0, *range=NULL)\n" DEFAULT,
+					i + 1, tests[i].desc);
+			continue ;
+		}
+		if (range_size != tests[i].expected_return || result == NULL || result == &sentinel)
+		{
+			printf("    " RED "[%d] %s Expected ret=%d & non-NULL, got ret=%d & ptr=%p\n" DEFAULT,
+				i + 1, tests[i].desc, tests[i].expected_return, range_size, (void *)result);
+			error -= 1;
+			if (result != NULL && result != &sentinel)
+				free(result);
+			continue ;
+		}
+		int	ok = 1;
+		for (int j = 0; j < tests[i].expected_return; j++)
+		{
+			int	exp = (int)((long)tests[i].min + j);
+			if (result[j] != exp)
+			{
+				printf("    " RED "[%d] %s Index %d: expected %d, got %d\n" DEFAULT,
+					i + 1, tests[i].desc, j, exp, result[j]);
+				ok = 0;
+				error -= 1;
+				break ;
+			}
+		}
+		if (ok)
+			printf("  " GREEN CHECKMARK GREY " [%d] %s Passed (size=%d)\n" DEFAULT,
+				i + 1, tests[i].desc, range_size);
+		free(result);
+	}
+	return (error);
 }

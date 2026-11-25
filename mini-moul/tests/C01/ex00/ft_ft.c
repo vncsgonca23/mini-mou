@@ -1,34 +1,52 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <fcntl.h>
+#include <limits.h>
 #include "../../../../ex00/ft_ft.c"
 #include "../../../utils/constants.h"
 
-int test1(void);
-
-int main(void)
+typedef struct s_test
 {
-	if (test1() != 0)
-		return (-1);
-	return (0);
+	char	*desc;
+	int		initial;
+	int		expected;
+}	t_test;
+
+int	run_tests(t_test *tests, int count);
+
+int	main(void)
+{
+	t_test	tests[] = {
+		{.desc = "ft_ft(&n) with n = 33", .initial = 33, .expected = 42},
+		{.desc = "ft_ft(&n) with n = 0", .initial = 0, .expected = 42},
+		{.desc = "ft_ft(&n) with n = -42", .initial = -42, .expected = 42},
+		{.desc = "ft_ft(&n) with n = 42", .initial = 42, .expected = 42},
+		{.desc = "ft_ft(&n) with n = INT_MIN", .initial = INT_MIN, .expected = 42},
+		{.desc = "ft_ft(&n) with n = INT_MAX", .initial = INT_MAX, .expected = 42},
+	};
+	int		count = sizeof(tests) / sizeof(tests[0]);
+
+	return (run_tests(tests, count));
 }
 
-int test1(void)
+int	run_tests(t_test *tests, int count)
 {
-	int	*nbr;
-	int	number = 33;
-	int	expected_output;
+	int	i;
+	int	error = 0;
 
-	nbr = &number;
-	ft_ft(nbr);
-	expected_output = 42;
-	if (number != expected_output)
+	for (i = 0; i < count; i++)
 	{
-		printf("    " RED "[1] ft_ft() Expected %d, got %d\n"DEFAULT, expected_output, number);
-		return (-1);
+		int	number = tests[i].initial;
+
+		ft_ft(&number);
+		if (number != tests[i].expected)
+		{
+			printf("    " RED "[%d] %s Expected %d, got %d\n" DEFAULT,
+				i + 1, tests[i].desc, tests[i].expected, number);
+			error -= 1;
+		}
+		else
+			printf("  " GREEN CHECKMARK GREY " [%d] %s Expected %d, got %d\n" DEFAULT,
+				i + 1, tests[i].desc, tests[i].expected, number);
 	}
-	else
-		printf("  " GREEN CHECKMARK GREY " [1] ft_ft() Expected %d, got %d\n"DEFAULT, expected_output, number);
-	return (0);
+	return (error);
 }

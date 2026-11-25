@@ -6,132 +6,64 @@
 
 typedef struct s_test
 {
-    char *desc;
-    char *s1;
-    char *s2;
-    int expected;
-} t_test;
+	char	*desc;
+	char	*s1;
+	char	*s2;
+}	t_test;
 
-int run_tests(t_test *tests, int count);
+int	sign_of(int x);
+int	run_tests(t_test *tests, int count);
 
-int main(void)
+int	main(void)
 {
-    t_test tests[] = {
-        {
-            .desc = "Compare two equal strings",
-            .s1 = "Hello",
-            .s2 = "Hello",
-            .expected = 0,
-        },
-        {
-            .desc = "Compare two different strings of equal length",
-            .s1 = "Hello",
-            .s2 = "He",
-            .expected = 108,
-        },
-        {
-            .desc = "Compare two different strings of different length",
-            .s1 = "Hello",
-            .s2 = "Hello1",
-            .expected = -49,
-        },
-        {
-            .desc = "Compare two empty strings",
-            .s1 = "",
-            .s2 = "",
-            .expected = 0,
-        },
-        {
-            .desc = "Compare a string with an empty string",
-            .s1 = "Hello",
-            .s2 = "",
-            .expected = 72,
-        },
-        {
-            .desc = "Compare two strings of length 1",
-            .s1 = "a",
-            .s2 = "b",
-            .expected = -1,
-        },
-        {
-            .desc = "Compare two strings of length 1 (reversed)",
-            .s1 = "b",
-            .s2 = "a",
-            .expected = 1,
-        },
-        {
-            .desc = "Compare two strings of length 2",
-            .s1 = "ab",
-            .s2 = "ac",
-            .expected = -1,
-        },
-        {
-            .desc = "Compare two strings of length 2 (reversed)",
-            .s1 = "ac",
-            .s2 = "ab",
-            .expected = 1,
-        },
-        {
-            .desc = "Compare two strings with null character",
-            .s1 = "Hello\0world",
-            .s2 = "Hello",
-            .expected = 0,
-        },
-        {
-            .desc = "Compare two strings with null character (reversed)",
-            .s1 = "Hello",
-            .s2 = "Hello\0world",
-            .expected = 0,
-        },
-        {
-            .desc = "Compare two strings with multiple null characters",
-            .s1 = "Hello\0world\0",
-            .s2 = "Hello\0",
-            .expected = 0,
-        },
-        {
-            .desc = "Compare two strings with multiple null characters (reversed)",
-            .s1 = "Hello\0",
-            .s2 = "Hello\0world\0",
-            .expected = 0,
-        },
-        {
-            .desc = "Compare two identical strings with different pointers",
-            .s1 = "Hello",
-            .s2 = strdup("Hello"),
-            .expected = 0,
-        },
-        {
-            .desc = "Compare two non-identical strings with different pointers",
-            .s1 = "Hello",
-            .s2 = strdup("World"),
-            .expected = -15,
-        },
-    };
-    int count = sizeof(tests) / sizeof(tests[0]);
+	t_test	tests[] = {
+		{.desc = "Equal strings", .s1 = "Hello", .s2 = "Hello"},
+		{.desc = "Empty strings", .s1 = "", .s2 = ""},
+		{.desc = "Non-empty vs empty", .s1 = "Hello", .s2 = ""},
+		{.desc = "Empty vs non-empty", .s1 = "", .s2 = "Hello"},
+		{.desc = "Prefix longer (Hello vs He)", .s1 = "Hello", .s2 = "He"},
+		{.desc = "Prefix shorter (Hello vs Hello1)", .s1 = "Hello", .s2 = "Hello1"},
+		{.desc = "Single char a < b", .s1 = "a", .s2 = "b"},
+		{.desc = "Single char b > a", .s1 = "b", .s2 = "a"},
+		{.desc = "Case difference (A < a)", .s1 = "Hello", .s2 = "hello"},
+		{.desc = "Diff at last char (ab < ac)", .s1 = "ab", .s2 = "ac"},
+		{.desc = "Unsigned char comparison (0x80 > 0x7f)", .s1 = "\x80", .s2 = "\x7f"},
+		{.desc = "Unsigned char comparison (0xff > 0x01)", .s1 = "\xff", .s2 = "\x01"},
+		{.desc = "Unsigned char comparison (0x01 < 0xff)", .s1 = "\x01", .s2 = "\xff"},
+	};
+	int		count = sizeof(tests) / sizeof(tests[0]);
 
-    return run_tests(tests, count);
+	return (run_tests(tests, count));
 }
 
-int run_tests(t_test *tests, int count)
+int	sign_of(int x)
 {
-    int i;
-    int error = 0;
+	if (x < 0)
+		return (-1);
+	if (x > 0)
+		return (1);
+	return (0);
+}
 
-    for (i = 0; i < count; i++)
-    {
-        int result = ft_strcmp(tests[i].s1, tests[i].s2);
+int	run_tests(t_test *tests, int count)
+{
+	int	i;
+	int	error = 0;
 
-        if (result != tests[i].expected)
-        {
-            printf("    " RED "[%d] %s Expected %d, got %d\n", i + 1, tests[i].desc, tests[i].expected, result);
-            error -= 1;
-        }
-        else
-        {
-            printf("  " GREEN CHECKMARK GREY " [%d] %s Expected %d, got %d\n" DEFAULT, i + 1, tests[i].desc, tests[i].expected, result);
-        }
-    }
+	for (i = 0; i < count; i++)
+	{
+		int	expected = strcmp(tests[i].s1, tests[i].s2);
+		int	result = ft_strcmp(tests[i].s1, tests[i].s2);
 
-    return error;
+		if (sign_of(result) != sign_of(expected))
+		{
+			printf("    " RED "[%d] %s Expected sign %d (strcmp=%d), got %d\n" DEFAULT,
+				i + 1, tests[i].desc, sign_of(expected), expected, result);
+			error -= 1;
+		}
+		else
+			printf("  " GREEN CHECKMARK GREY " [%d] %s Passed (got %d)\n" DEFAULT,
+				i + 1, tests[i].desc, result);
+	}
+	return (error);
 }

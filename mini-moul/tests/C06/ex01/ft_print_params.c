@@ -1,89 +1,107 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
-#include <errno.h>
+#include <unistd.h>
+#include <sys/wait.h>
 #include "../../../utils/constants.h"
 
-int test1(void);
-char* modify_string(const char *str);
-
-int main(void)
+typedef struct s_test
 {
-  if (test1() != 0)
-    return (-1);
-  return (0);
+	char	*desc;
+	char	*argv[8];
+	char	*expected;
+}	t_test;
+
+static int	run_prog(const char *bin, char *const argv[], char *out, size_t cap, size_t *out_len)
+{
+	int		pfd[2];
+	pid_t	pid;
+	int		status;
+
+	if (pipe(pfd) == -1)
+		return (-1);
+	pid = fork();
+	if (pid == -1)
+		return (-1);
+	if (pid == 0)
+	{
+		close(pfd[0]);
+		dup2(pfd[1], STDOUT_FILENO);
+		close(pfd[1]);
+		execv(bin, argv);
+		_exit(127);
+	}
+	close(pfd[1]);
+	*out_len = 0;
+	while (*out_len < cap - 1)
+	{
+		ssize_t	r = read(pfd[0], out + *out_len, cap - 1 - *out_len);
+		if (r <= 0)
+			break ;
+		*out_len += (size_t)r;
+	}
+	out[*out_len] = '\0';
+	close(pfd[0]);
+	waitpid(pid, &status, 0);
+	return (WIFEXITED(status) ? WEXITSTATUS(status) : -1);
 }
 
-int test1()
+int	main(void)
 {
-  char buf[1024];
-  char *program_name = "./program_name"; // Change this to your program name
-  char *copy_program = "cp ../ex01/ft_print_params.c program_name.c";
-  char *compile_command = "cc -Wall -Werror -Wextra program_name.c -o program_name"; // Change this to the compile command for your program
-  FILE *fp;
-  int result;
-  char *args[] = {program_name, "hello\n", "world\n", "123\n", NULL}; // Change these to the arguments you want to pass to the program
-  char *run_command = "./program_name hello world 123";
+	const char	*bin = "./c06_ex01_bin";
 
-  // Compile the program
-  system(copy_program);
-  system(compile_command);
+	if (system("cc -Wall -Wextra -Werror ../ex01/ft_print_params.c -o ./c06_ex01_bin") != 0)
+	{
+		printf("    " RED "[0] Failed to compile ../ex01/ft_print_params.c\n" DEFAULT);
+		return (-1);
+	}
 
-  // Run the program and capture its output
-  fp = popen(run_command, "r");
-  if (fp == NULL)
-  {
-    fprintf(stderr, "Failed to run command '%s': %s\n", program_name, strerror(errno));
-    exit(EXIT_FAILURE);
-  }
+	t_test	tests[] = {
+		{
+			.desc = "No arguments (must output nothing)",
+			.argv = {"./a.out", NULL},
+			.expected = "",
+		},
+		{
+			.desc = "Single argument",
+			.argv = {"./a.out", "test1", NULL},
+			.expected = "test1\n",
+		},
+		{
+			.desc = "Subject example (test1 test2 test3)",
+			.argv = {"./a.out", "test1", "test2", "test3", NULL},
+			.expected = "test1\ntest2\ntest3\n",
+		},
+		{
+			.desc = "Empty string arguments mixed with non-empty",
+			.argv = {"./a.out", "", "hello", "", NULL},
+			.expected = "\nhello\n\n",
+		},
+		{
+			.desc = "Arguments with spaces and special characters",
+			.argv = {"./a.out", "hello world", "42!", "a\tb", NULL},
+			.expected = "hello world\n42!\na\tb\n",
+		},
+	};
+	int		count = sizeof(tests) / sizeof(tests[0]);
+	int		error = 0;
 
-  int i = 1;
-  while (fgets(buf, sizeof(buf), fp) != NULL)
-  {
-    if (strcmp(buf, args[i]) != 0)
-    {
-      printf("    " RED "[%d] %s Expected \"%s\", got \"%s\"\n" DEFAULT, i, run_command, modify_string(args[i]), modify_string(buf));
-      result = -1;
-    }
-    else
-    {
-      printf("  " GREEN CHECKMARK GREY " [%d] %s Expected \"%s\", got \"%s\"\n" DEFAULT, i, run_command, modify_string(args[i]), modify_string(buf));
-      result = 0;
-    }
-    i++;
-  }
+	for (int i = 0; i < count; i++)
+	{
+		char	buf[1024];
+		size_t	len = 0;
+		size_t	exp_len = strlen(tests[i].expected);
+		int		rc = run_prog(bin, tests[i].argv, buf, sizeof(buf), &len);
 
-  if (pclose(fp) == -1)
-  {
-    fprintf(stderr, "Failed to close command stream: %s\n", strerror(errno));
-    exit(EXIT_FAILURE);
-  }
-
-  // Remove the program executable
-  if (remove(program_name) != 0)
-  {
-    fprintf(stderr, "Failed to remove program '%s': %s\n", program_name, strerror(errno));
-    exit(EXIT_FAILURE);
-  }
-
-  if (remove("program_name.c") != 0)
-  {
-    fprintf(stderr, "Failed to remove program '%s': %s\n", "program_name.c", strerror(errno));
-    exit(EXIT_FAILURE);
-  }
-
-  return (result);
-}
-
-char* modify_string(const char *str) {
-    int len = strlen(str);
-    if (len > 0 && str[len - 1] == '\n') {
-        char *new_str = (char*)malloc(len);
-        strncpy(new_str, str, len - 1);
-        new_str[len - 1] = '$';
-        return new_str;
-    } else {
-        return strdup(str);
-    }
+		if (rc != 0 || len != exp_len || memcmp(buf, tests[i].expected, exp_len) != 0)
+		{
+			printf("    " RED "[%d] %s Expected %zu bytes, got %zu bytes (rc=%d)\n" DEFAULT,
+				i + 1, tests[i].desc, exp_len, len, rc);
+			error -= 1;
+		}
+		else
+			printf("  " GREEN CHECKMARK GREY " [%d] %s Passed\n" DEFAULT, i + 1, tests[i].desc);
+	}
+	remove(bin);
+	return (error);
 }

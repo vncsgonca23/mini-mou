@@ -1,151 +1,107 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
-#include <fcntl.h>
-#include <errno.h>
+#include <unistd.h>
+#include <sys/wait.h>
 #include "../../../utils/constants.h"
 
 typedef struct s_test
 {
-  char *desc;
-  char **argv;
-  char *expected;
-} t_test;
+	char	*desc;
+	char	*argv[8];
+	char	*expected;
+}	t_test;
 
-int run_test(t_test test, int test_num);
-char *modify_string(const char *str);
-
-int main(void)
+static int	run_prog(const char *bin, char *const argv[], char *out, size_t cap, size_t *out_len)
 {
-  t_test tests[] = {
-      {.desc = "ft_print_program_name with one argument",
-       .argv = (char *[]){"program_name", NULL},
-       .expected = "./program_name\n"},
-      {.desc = "ft_print_program_name with multiple arguments",
-       .argv = (char *[]){"program_name", "arg1", "arg2", NULL},
-       .expected = "./program_name\n"},
-      {.desc = "ft_print_program_name with no arguments",
-       .argv = (char *[]){"NULL"},
-       .expected = "./program_name\n"},
-      {.desc = "ft_print_program_name with empty string",
-       .argv = (char *[]){""},
-       .expected = "./program_name\n"},
-      {.desc = "ft_print_program_name with long argument",
-       .argv = (char *[]){"program_name", "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz", NULL},
-       .expected = "./program_name\n"},
-  };
+	int		pfd[2];
+	pid_t	pid;
+	int		status;
 
-  int num_tests = sizeof(tests) / sizeof(t_test);
-
-  int overall_result = 0;
-
-  for (int i = 0; i < num_tests; i++)
-  {
-    int result = run_test(tests[i], i + 1);
-
-    if (result != 0)
-    {
-      overall_result = -1;
-    }
-  }
-
-  return overall_result;
+	if (pipe(pfd) == -1)
+		return (-1);
+	pid = fork();
+	if (pid == -1)
+		return (-1);
+	if (pid == 0)
+	{
+		close(pfd[0]);
+		dup2(pfd[1], STDOUT_FILENO);
+		close(pfd[1]);
+		execv(bin, argv);
+		_exit(127);
+	}
+	close(pfd[1]);
+	*out_len = 0;
+	while (*out_len < cap - 1)
+	{
+		ssize_t	r = read(pfd[0], out + *out_len, cap - 1 - *out_len);
+		if (r <= 0)
+			break ;
+		*out_len += (size_t)r;
+	}
+	out[*out_len] = '\0';
+	close(pfd[0]);
+	waitpid(pid, &status, 0);
+	return (WIFEXITED(status) ? WEXITSTATUS(status) : -1);
 }
 
-int run_test(t_test test, int test_num)
+int	main(void)
 {
-  fflush(stdout);
-  char buf[1024];
-  memset(buf, 0, sizeof(buf));
-  char *program_name = "./program_name"; // Change this to your program name
-  char *copy_program = "cp ../ex00/ft_print_program_name.c program_name.c";
-  char *compile_command = "cc -Wall -Werror -Wextra program_name.c -o program_name"; // Change this to the compile command for your program
-  FILE *fp;
-  int result;
+	const char	*bin = "./c06_ex00_bin";
 
-  // Compile the program
-  system(copy_program);
-  system(compile_command);
+	if (system("cc -Wall -Wextra -Werror ../ex00/ft_print_program_name.c -o ./c06_ex00_bin") != 0)
+	{
+		printf("    " RED "[0] Failed to compile ../ex00/ft_print_program_name.c\n" DEFAULT);
+		return (-1);
+	}
 
-  // Construct the command to run
-  char run_command[1024] = {0};
-  strcat(run_command, program_name);
-  for (int i = 1; test.argv[i]; i++)
-  {
-    strcat(run_command, " ");
-    strcat(run_command, test.argv[i]);
-  }
+	t_test	tests[] = {
+		{
+			.desc = "Standard ./a.out with no arguments",
+			.argv = {"./a.out", NULL},
+			.expected = "./a.out\n",
+		},
+		{
+			.desc = "With multiple arguments (must only print argv[0])",
+			.argv = {"./program_name", "arg1", "arg2", "arg3", NULL},
+			.expected = "./program_name\n",
+		},
+		{
+			.desc = "Path with directories",
+			.argv = {"/usr/local/bin/ft_test", "hello", NULL},
+			.expected = "/usr/local/bin/ft_test\n",
+		},
+		{
+			.desc = "Program name with spaces and special chars",
+			.argv = {"./my prog $42!", NULL},
+			.expected = "./my prog $42!\n",
+		},
+		{
+			.desc = "Empty argv[0]",
+			.argv = {"", "arg1", NULL},
+			.expected = "\n",
+		},
+	};
+	int		count = sizeof(tests) / sizeof(tests[0]);
+	int		error = 0;
 
-  // Run the program and capture its output
-  fp = popen(run_command, "r");
-  if (fp == NULL)
-  {
-    fprintf(stderr, "Failed to run command '%s': %s\n", run_command, strerror(errno));
-    exit(EXIT_FAILURE);
-  }
+	for (int i = 0; i < count; i++)
+	{
+		char	buf[1024];
+		size_t	len = 0;
+		size_t	exp_len = strlen(tests[i].expected);
+		int		rc = run_prog(bin, tests[i].argv, buf, sizeof(buf), &len);
 
-  while (fgets(buf, sizeof(buf), fp) != NULL)
-  {
-    if (strcmp(buf, test.expected) != 0)
-    {
-      printf("    " RED "[%d] %s Expected \"%s\", got \"%s\"\n" DEFAULT, test_num, test.desc, test.expected, modify_string(buf));
-      result = -1;
-    }
-    else
-    {
-      printf("  " GREEN CHECKMARK GREY " [%d] %s output \"%s\" as expected\n" DEFAULT, test_num,run_command, modify_string(buf));
-      result = 0;
-    }
-  }
-
-  if (pclose(fp) == -1)
-  {
-    fprintf(stderr, "Failed to close command stream: %s\n", strerror(errno));
-    exit(EXIT_FAILURE); // Remove the program executable
-    if (remove(program_name) != 0)
-    {
-      fprintf(stderr, "Failed to remove program '%s': %s\n", program_name, strerror(errno));
-      exit(EXIT_FAILURE);
-    }
-
-    if (remove("program_name.c") != 0)
-    {
-      fprintf(stderr, "Failed to remove program '%s': %s\n", "program_name.c", strerror(errno));
-      exit(EXIT_FAILURE);
-    }
-
-    return (result);
-  }
-
-  // Remove the program executable
-  if (remove(program_name) != 0)
-  {
-    fprintf(stderr, "Failed to remove program '%s': %s\n", program_name, strerror(errno));
-    exit(EXIT_FAILURE);
-  }
-
-  if (remove("program_name.c") != 0)
-  {
-    fprintf(stderr, "Failed to remove program '%s': %s\n", "program_name.c", strerror(errno));
-    exit(EXIT_FAILURE);
-  }
-
-  return (result);
-}
-
-char *modify_string(const char *str)
-{
-  int len = strlen(str);
-  if (len > 0 && str[len - 1] == '\n')
-  {
-    char *new_str = (char *)malloc(len);
-    strncpy(new_str, str, len - 1);
-    new_str[len - 1] = '$';
-    return new_str;
-  }
-  else
-  {
-    return strdup(str);
-  }
+		if (rc != 0 || len != exp_len || memcmp(buf, tests[i].expected, exp_len) != 0)
+		{
+			printf("    " RED "[%d] %s Expected %zu bytes, got %zu bytes (rc=%d)\n" DEFAULT,
+				i + 1, tests[i].desc, exp_len, len, rc);
+			error -= 1;
+		}
+		else
+			printf("  " GREEN CHECKMARK GREY " [%d] %s Passed\n" DEFAULT, i + 1, tests[i].desc);
+	}
+	remove(bin);
+	return (error);
 }

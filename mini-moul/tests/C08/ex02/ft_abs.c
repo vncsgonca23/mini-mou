@@ -1,60 +1,34 @@
-#include <stdio.h>
 #include "../../../../ex02/ft_abs.h"
+#include "../../../../ex02/ft_abs.h"
+#include <stdio.h>
+#include <limits.h>
 #include "../../../utils/constants.h"
 
-typedef struct s_test
+static int	check_case(int num, const char *desc, int actual, int expected)
 {
-        char *desc;
-        int input;
-        int expected;
-} t_test;
-
-int run_tests(t_test *tests, int count);
-
-int main(void)
-{
-        t_test tests[] = {
-            {
-                .desc = "Test 1: ABS with positive value",
-                .input = 5,
-                .expected = 5,
-            },
-            {
-                .desc = "Test 2: ABS with negative value",
-                .input = -5,
-                .expected = 5,
-            },
-            {
-                .desc = "Test 3: ABS with zero value",
-                .input = 0,
-                .expected = 0,
-            },
-        };
-
-        int count = sizeof(tests) / sizeof(tests[0]);
-
-        return (run_tests(tests, count));
+	if (actual != expected)
+	{
+		printf("    " RED "[%d] %s Expected %d, got %d\n" DEFAULT, num, desc, expected, actual);
+		return (-1);
+	}
+	printf("  " GREEN CHECKMARK GREY " [%d] %s Expected %d, got %d\n" DEFAULT, num, desc, expected, actual);
+	return (0);
 }
 
-int run_tests(t_test *tests, int count)
+int	main(void)
 {
-        int i;
-        int error = 0;
+	int	error = 0;
 
-        for (i = 0; i < count; i++)
-        {
-                int result;
-
-                result = ABS(tests[i].input);
-                if (result != tests[i].expected)
-                {
-                        printf("    " RED "[%d] %s Expected %d, got %d\n" DEFAULT, i + 1, tests[i].desc, tests[i].expected, result);
-                        error++;
-                }
-                else
-                {
-                        printf("  " GREEN CHECKMARK GREY " [%d] %s Expected %d, got %d\n" DEFAULT, i + 1, tests[i].desc, result, tests[i].expected);
-                }
-        }
-        return error;
+	error += check_case(1, "ABS(5)", ABS(5), 5);
+	error += check_case(2, "ABS(-5)", ABS(-5), 5);
+	error += check_case(3, "ABS(0)", ABS(0), 0);
+	error += check_case(4, "ABS(1)", ABS(1), 1);
+	error += check_case(5, "ABS(-1)", ABS(-1), 1);
+	error += check_case(6, "ABS(INT_MAX)", ABS(INT_MAX), INT_MAX);
+	error += check_case(7, "ABS(-5 + 2) (inner expression parens)", ABS(-5 + 2), 3);
+	error += check_case(8, "ABS(2 - 7) (inner subtraction parens)", ABS(2 - 7), 5);
+	error += check_case(9, "10 * ABS(-3) (outer parens precedence)", 10 * ABS(-3), 30);
+	error += check_case(10, "ABS(-4) + ABS(-6) (combined expressions)", ABS(-4) + ABS(-6), 10);
+	error += check_case(11, "-ABS(-5) (unary minus precedence)", -ABS(-5), -5);
+	return (error);
 }

@@ -1,83 +1,60 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <fcntl.h>
+#include <limits.h>
 #include "../../../../ex03/ft_div_mod.c"
 #include "../../../utils/constants.h"
 
-int test1(void);
-int test2(void);
-int test3(void);
-
-int main(void)
+typedef struct s_test
 {
-	if (test1()+test2()+test3() != 0)
-		return (-1);
-	return (0);
+	char	*desc;
+	int		a;
+	int		b;
+	int		expected_div;
+	int		expected_mod;
+}	t_test;
+
+int	run_tests(t_test *tests, int count);
+
+int	main(void)
+{
+	t_test	tests[] = {
+		{.desc = "ft_div_mod(10, 5)", .a = 10, .b = 5, .expected_div = 2, .expected_mod = 0},
+		{.desc = "ft_div_mod(25, 6)", .a = 25, .b = 6, .expected_div = 4, .expected_mod = 1},
+		{.desc = "ft_div_mod(47, 8)", .a = 47, .b = 8, .expected_div = 5, .expected_mod = 7},
+		{.desc = "ft_div_mod(0, 5)", .a = 0, .b = 5, .expected_div = 0, .expected_mod = 0},
+		{.desc = "ft_div_mod(3, 10)", .a = 3, .b = 10, .expected_div = 0, .expected_mod = 3},
+		{.desc = "ft_div_mod(-25, 6)", .a = -25, .b = 6, .expected_div = -4, .expected_mod = -1},
+		{.desc = "ft_div_mod(25, -6)", .a = 25, .b = -6, .expected_div = -4, .expected_mod = 1},
+		{.desc = "ft_div_mod(-25, -6)", .a = -25, .b = -6, .expected_div = 4, .expected_mod = -1},
+		{.desc = "ft_div_mod(INT_MAX, 1)", .a = INT_MAX, .b = 1, .expected_div = INT_MAX, .expected_mod = 0},
+		{.desc = "ft_div_mod(INT_MIN, 2)", .a = INT_MIN, .b = 2, .expected_div = -1073741824, .expected_mod = 0},
+		{.desc = "ft_div_mod(INT_MAX, INT_MAX)", .a = INT_MAX, .b = INT_MAX, .expected_div = 1, .expected_mod = 0},
+	};
+	int		count = sizeof(tests) / sizeof(tests[0]);
+
+	return (run_tests(tests, count));
 }
 
-int test1(void)
+int	run_tests(t_test *tests, int count)
 {
-	int a;
-	int b;
-	int x;
-	int y;
+	int	i;
+	int	error = 0;
 
-	a = 10;
-	b = 5;
-	ft_div_mod(a, b, &x, &y);
-
-
-	if (x != 2 || y != 0)
+	for (i = 0; i < count; i++)
 	{
-		printf("    " RED "[1] ft_div_mod(10, 5, &x, &y) Expected x = 2, got %d. Expected y = 0, got %d\n" DEFAULT, x, y);
-		return (-1);
+		int	div = -999;
+		int	mod = -999;
+
+		ft_div_mod(tests[i].a, tests[i].b, &div, &mod);
+		if (div != tests[i].expected_div || mod != tests[i].expected_mod)
+		{
+			printf("    " RED "[%d] %s Expected div = %d, mod = %d, got div = %d, mod = %d\n" DEFAULT,
+				i + 1, tests[i].desc, tests[i].expected_div, tests[i].expected_mod, div, mod);
+			error -= 1;
+		}
+		else
+			printf("  " GREEN CHECKMARK GREY " [%d] %s div = %d, mod = %d as expected\n" DEFAULT,
+				i + 1, tests[i].desc, div, mod);
 	}
-	else
-		printf("  " GREEN CHECKMARK GREY " [1] ft_div_mod(10, 5, &x, &y) Expected x = 2, got %d. Expected y = 0, got %d\n" DEFAULT, x, y);
-	return (0);
-}
-
-int test2(void)
-{
-	int a;
-	int b;
-	int x;
-	int y;
-
-	a = 25;
-	b = 6;
-	ft_div_mod(a, b, &x, &y);
-
-
-	if (x != 4 || y != 1)
-	{
-		printf("    " RED "[2] ft_div_mod(25, 6, &x, &y) Expected x = 4, got %d. Expected y = 1, got %d\n" DEFAULT, x, y);
-		return (-1);
-	}
-	else
-		printf("  " GREEN CHECKMARK GREY " [2] ft_div_mod(25, 6, &x, &y) Expected x = 4, got %d. Expected y = 1, got %d\n" DEFAULT, x, y);
-	return (0);
-}
-
-int test3(void)
-{
-	int a;
-	int b;
-	int x;
-	int y;
-
-	a = 47;
-	b = 8;
-	ft_div_mod(a, b, &x, &y);
-
-
-	if (x != 5 || y != 7)
-	{
-		printf("    " RED "[3] ft_div_mod(47, 8, &x, &y) Expected x = 5, got %d. Expected y = 7, got %d\n" DEFAULT, x, y);
-		return (-1);
-	}
-	else
-		printf("  " GREEN CHECKMARK GREY " [3] ft_div_mod(47, 8, &x, &y) Expected x = 5, got %d. Expected y = 7, got %d\n" DEFAULT, x, y);
-	return (0);
+	return (error);
 }
