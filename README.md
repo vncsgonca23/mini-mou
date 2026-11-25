@@ -22,63 +22,58 @@ git -C ~/mini-mou pull --ff-only
 ```
 
 
-## Get Started
+## Get started
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/vncsgonca23/mini-mou.git "$HOME/mini-mou"
+```
+
+### 2. Create an alias for your shell
+
+Run only the block for the shell you use. Each block saves the alias for future
+sessions.
+
+**Bash**
+
+```bash
+printf '%s\n' "alias mini='\"\$HOME/mini-mou/mini-moul.sh\"'" >> ~/.bashrc
+source ~/.bashrc
+```
+
+**Zsh**
+
+```zsh
+printf '%s\n' "alias mini='\"\$HOME/mini-mou/mini-moul.sh\"'" >> "${ZDOTDIR:-$HOME}/.zshrc"
+source "${ZDOTDIR:-$HOME}/.zshrc"
+```
+
+**Fish**
+
+```fish
+alias --save mini '"$HOME/mini-mou/mini-moul.sh"'
+```
+
+### 3. Run the tests
+
+Change to the directory that contains your exercise folders (`ex00`, `ex01`,
+and so on). Replace the example path with your own.
+
+```bash
+cd /path/to/assignment/C02
+mini C02
+```
+
+Use the corresponding assignment name for Shell00, Shell01, Rush00, or C00–C13.
 
 > The local suites cover the exercises listed below. The official evaluator may check additional cases.
 
-1. Go to your root `~` directory.
+To enable the sanitizers, run:
 
 ```bash
-cd ~
+MINI_ASAN=1 mini C02
 ```
-
-
-2. Clone the git there.
-
-```bash
-git clone https://github.com/vncsgonca23/mini-mou.git
-```
-
-
-3. Now create an alias for it.
-
-- zsh:
-
-```zsh
-echo "alias mini='~/mini-mou/mini-moul.sh'" >> ~/.zshrc && source ~/.zshrc
-```
-
-- bash:
-
-```bash
-echo "alias mini='~/mini-mou/mini-moul.sh'" >> ~/.bashrc && source ~/.bashrc
-```
-
-
-4. Go to your assignment directory where you want to test: e.g: C02 directory
-
-```bash
-cd C02
-```
-
-
-5. Run using command `mini` with assignment name as argument (supports `Shell00`–`Shell01`, `Rush00`, and `C00`–`C13`):
-
-```bash
-mini Shell00
-mini Rush00
-mini C02
-mini C12
-```
-
-Optional: enable **AddressSanitizer + UndefinedBehaviorSanitizer + LeakSanitizer** (`MINI_ASAN=1`) to catch memory leaks, out-of-bounds accesses, and undefined behavior:
-
-```bash
-MINI_ASAN=1 mini C07
-MINI_ASAN=1 mini C12
-```
-
-6. You can now run it for every assignment directory, where tests are provided. Have fun!
 
 ## Debugging
 
