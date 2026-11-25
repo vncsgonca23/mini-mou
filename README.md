@@ -1,8 +1,8 @@
-# Mini-mou
+# mini-mou
 
-![Mini-moulinette](mini-moulinette.jpg)
+![mini-mou](mini-mou.png)
 
-Mini-mou runs automated tests for 42 Piscine exercises. Run it from your
+mini-mou runs automated tests for 42 Piscine exercises. Run it from your
 assignment directory to check your work before submission. The runner and
 exercise suites work independently of the subject PDFs.
 
@@ -10,7 +10,7 @@ exercise suites work independently of the subject PDFs.
 
 ![screenshot](screenshot.jpg)
 
-- Mini moulinette runs through all the tests cases automatically, and checks if the test conditions are met.
+- mini-mou runs through all the tests cases automatically, and checks if the test conditions are met.
 - It will then output the result.
 - The scores are based on 42's practice, where if easier/earlier questions are incorrect, the rest won't count.
 
