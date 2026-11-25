@@ -161,16 +161,6 @@ See the above, you can add more tests here. You need to manage your customizatio
 Open an issue or pull request with the module, exercise number, input, and
 expected behavior. Test sources are under [mini-moul/tests](mini-moul/tests).
 
-## Authors
-
-[Khairul Haaziq](https://github.com/khairulhaaziq)
-
-
-## Contributors
-
-[chatGPT](ai.com)
-
-
 ## License
 
-MIT. Copyright 2023 [Khairul Haaziq](https://github.com/khairulhaaziq).
+See [LICENSE](LICENSE) for the test runner's MIT license.
