@@ -24,7 +24,7 @@ This is now day 11 of piscine. I have wasted so many hours getting evaluated, do
 Mini moulinette is updated daily, to update:
 
 ```bash
-cd ~/mini-moulinette
+cd ~/mini-mou
 ```
 
 ```bash
@@ -47,7 +47,7 @@ cd ~
 2. Clone the git there.
 
 ```bash
-git clone https://github.com/khairulhaaziq/mini-moulinette.git
+git clone https://github.com/vncsgonca23/mini-mou.git
 ```
 
 
@@ -56,13 +56,13 @@ git clone https://github.com/khairulhaaziq/mini-moulinette.git
 - zsh:
 
 ```zsh
-echo "alias mini='~/mini-moulinette/mini-moul.sh'" >> ~/.zshrc && source ~/.zshrc
+echo "alias mini='~/mini-mou/mini-moul.sh'" >> ~/.zshrc && source ~/.zshrc
 ```
 
 - bash:
 
 ```bash
-echo "alias mini='~/mini-moulinette/mini-moul.sh'" >> ~/.bashrc && source ~/.bashrc
+echo "alias mini='~/mini-mou/mini-moul.sh'" >> ~/.bashrc && source ~/.bashrc
 ```
 
 
@@ -73,16 +73,20 @@ cd C02
 ```
 
 
-5. Run using command `mini` with assignment number as argument. e.g: C02.
+5. Run using command `mini` with assignment name as argument (supports `Shell00`–`Shell01`, `Rush00`, and `C00`–`C13`):
 
 ```bash
+mini Shell00
+mini Rush00
 mini C02
+mini C12
 ```
 
-e.g: C03
+Optional: enable **AddressSanitizer + UndefinedBehaviorSanitizer + LeakSanitizer** (`MINI_ASAN=1`) to catch memory leaks, out-of-bounds accesses, and undefined behavior:
 
 ```bash
-mini C03
+MINI_ASAN=1 mini C07
+MINI_ASAN=1 mini C12
 ```
 
 6. You can now run it for every assignment directory, where tests are provided. Have fun!
@@ -102,7 +106,7 @@ The error/success messages should be explicit enough. However sometimes you will
 - You need to find the test cases, go here:
 
 ```bash
-cd ~/mini-moulinette/mini-moul/tests
+cd ~/mini-mou/mini-moul/tests
 ```
 
 The current directory contains all the test cases. Every test is in the file that is the same name as the function/program it is testing, e.g. C05/ex00/ft_iterative_factorial.c will contain test for C05 > ex00 > ft_iterative_factorial.c.
@@ -149,20 +153,23 @@ See the above, you can add more tests here. You need to manage your customizatio
 
 | Assignment            | Coverage                   | Accuracy         | Remarks         |
 | :-------------------- | :------------------------: | :--------------: | :-------------- |
-| C00                   | 9/9                        | Not yet rated    |                 |
-| C01                   | 9/9                        | Not yet rated    |                 |
-| C02                   | 12/13                      | Not yet rated    |                 |
-| C03                   | 6/6                        | Not yet rated    |                 |
-| C04                   | 6/6                        | Not yet rated    |                 |
-| C05                   | 8/9                        | Not yet rated    | ex05, ex06, ex07 tests doesn't cover all edge cases |
-| C06                   | 4/4                        | Not yet rated    |                 |
-| C07                   | 6/6                        | Not yet rated    | ex02, ex03 tests doesn't cover all edge cases |
-| C08                   | 6/6                        | Not yet rated    | every tests mostly just cover compilation |
-| C09                   | 0/3                        | Not yet rated    | WIP             |
-| C10                   | 0/4                        | Not yet rated    | WIP             |
-| C11                   | 0/8                        | Not yet rated    | WIP             |
-| C12                   | 0/18                       | Not yet rated    |                 |
-| C13                   | 0/8                        | Not yet rated    |                 |
+| Shell00               | 10/10                      | Verified         | ex00–ex09 (permissions, timestamps, git, tar, magic file, etc.) |
+| Shell01               | 8/8                        | Verified         | ex01–ex08 (ex00 is an exam reminder in the subject) |
+| Rush00                | 1/1                        | Verified         | Auto-detects `rush00.c`..`rush04.c` (incl. multi-variant bonus), defense `(123, 42)` & edge cases |
+| C00                   | 9/9                        | Verified         | ex00–ex08 (deliverables, allowed functions, `INT_MIN`/`INT_MAX` & edge cases) |
+| C01                   | 9/9                        | Verified         | ex00–ex08 |
+| C02                   | 13/13                      | Verified         | ex00–ex12 |
+| C03                   | 6/6                        | Verified         | ex00–ex05 |
+| C04                   | 6/6                        | Verified         | ex00–ex05 (`INT_MIN`, invalid bases, signs/whitespaces) |
+| C05                   | 9/9                        | Verified         | ex00–ex08 (incl. `ft_ten_queens_puzzle` & overflow/performance checks) |
+| C06                   | 4/4                        | Verified         | ex00–ex03 (program binaries, ASCII sorting, edge args) |
+| C07                   | 6/6                        | Verified         | ex00–ex05 (`malloc` checks, `MINI_ASAN=1` compatible) |
+| C08                   | 6/6                        | Verified         | ex00–ex05 (headers, macro parentheses/side-effects, `ft_strs_to_tab` & `ft_show_tab`) |
+| C09                   | 3/3                        | Verified         | ex00 (`libft_creator.sh`), ex01 (`Makefile` rules/relink), ex02 (`ft_split`) |
+| C10                   | 4/4                        | Verified         | ex00–ex03 (`ft_display_file`, `ft_cat`, `ft_tail`, `ft_hexdump` + `Makefile`) |
+| C11                   | 8/8                        | Verified         | ex00–ex07 (incl. `do-op` + `Makefile`) |
+| C12                   | 18/18                      | Verified         | ex00–ex17 (linked lists, `ft_list.h`, `MINI_ASAN=1` compatible) |
+| C13                   | 8/8                        | Verified         | ex00–ex07 (binary trees, `ft_btree.h`, `MINI_ASAN=1` compatible) |
 
 
 ## Contributing
