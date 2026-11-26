@@ -38,21 +38,21 @@ sessions.
 **Bash**
 
 ```bash
-printf '%s\n' "alias mini='\"\$HOME/mini-mou/mini-moul.sh\"'" >> ~/.bashrc
+printf '%s\n' "alias mini='\"\$HOME/mini-mou/mini-mou.sh\"'" >> ~/.bashrc
 source ~/.bashrc
 ```
 
 **Zsh**
 
 ```zsh
-printf '%s\n' "alias mini='\"\$HOME/mini-mou/mini-moul.sh\"'" >> "${ZDOTDIR:-$HOME}/.zshrc"
+printf '%s\n' "alias mini='\"\$HOME/mini-mou/mini-mou.sh\"'" >> "${ZDOTDIR:-$HOME}/.zshrc"
 source "${ZDOTDIR:-$HOME}/.zshrc"
 ```
 
 **Fish**
 
 ```fish
-alias --save mini '"$HOME/mini-mou/mini-moul.sh"'
+alias --save mini '"$HOME/mini-mou/mini-mou.sh"'
 ```
 
 ### 3. Run the tests
@@ -90,7 +90,7 @@ The error/success messages should be explicit enough. However sometimes you will
 - You need to find the test cases, go here:
 
 ```bash
-cd ~/mini-mou/mini-moul/tests
+cd ~/mini-mou/mini-mou/tests
 ```
 
 The current directory contains all the test cases. Every test is in the file that is the same name as the function/program it is testing, e.g. C05/ex00/ft_iterative_factorial.c will contain test for C05 > ex00 > ft_iterative_factorial.c.
@@ -159,7 +159,7 @@ See the above, you can add more tests here. You need to manage your customizatio
 ## Contributing
 
 Open an issue or pull request with the module, exercise number, input, and
-expected behavior. Test sources are under [mini-moul/tests](mini-moul/tests).
+expected behavior. Test sources are under [mini-mou/tests](mini-mou/tests).
 
 ## License
 
