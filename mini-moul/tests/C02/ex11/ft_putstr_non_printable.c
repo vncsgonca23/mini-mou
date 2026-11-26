@@ -17,6 +17,17 @@ int	run_tests(t_test *tests, int count);
 
 int	main(void)
 {
+	unsigned char	extended_bytes[0x80 + 1] = {0};
+	char			extended_escapes[0x80 * 3 + 1];
+
+	for (unsigned int byte = 0x80; byte <= 0xff; byte++)
+	{
+		unsigned int index = byte - 0x80;
+
+		extended_bytes[index] = (unsigned char)byte;
+		snprintf(extended_escapes + index * 3, 4, "\\%02x", byte);
+	}
+
 	t_test	tests[] = {
 		{
 			.desc = "Subject example (Hello\\nHow are you?)",
@@ -47,6 +58,11 @@ int	main(void)
 			.desc = "String starts with extended bytes, then mixes ASCII and controls",
 			.src = "\x9b\x85\xc6\xae" "X0" "\xbb" "N" "\x06\xa7\xa9\x0e",
 			.expected = "\\9b\\85\\c6\\aeX0\\bbN\\06\\a7\\a9\\0e",
+		},
+		{
+			.desc = "All bytes from 0x80 through 0xff are non-printable",
+			.src = (char *)extended_bytes,
+			.expected = extended_escapes,
 		},
 		{
 			.desc = "Mixed printable and non-printable text",
